@@ -14,8 +14,10 @@ public abstract class AbstractZabbixService {
     }
 
     protected void zabbixError(JSONObject response) throws Exception {
-        if (!isBlank(response.getString("error")))
+        if (!isBlank(response.getString("error"))){
             throw new Exception("向Zabbix请求出错了！" + JSON.parseObject(response.getString("error")).getString("data"));
+        }
+
     }
 
 }
