@@ -260,4 +260,16 @@ public class ZabbixController {
         return utilization.substring(0,4);
     }
 
+    @ApiOperation(value = "各级别主机个数")
+    @PostMapping("/getHost")
+    public List<Object> getHost() throws Exception {
+        List<Object> list = new ArrayList<>();
+        for (int i = 0;i < 3;i++){
+            Integer gethost = zabbixService.gethost(i);
+            list.add(gethost);
+        }
+        return list;
+    }
+
+
 }

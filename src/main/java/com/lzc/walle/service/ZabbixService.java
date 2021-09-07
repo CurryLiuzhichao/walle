@@ -8,6 +8,7 @@ import com.lzc.walle.vo.Score;
 import io.github.hengyunabc.zabbix.api.Request;
 import io.github.hengyunabc.zabbix.api.RequestBuilder;
 import io.github.hengyunabc.zabbix.api.ZabbixApi;
+import io.swagger.models.auth.In;
 import org.apache.commons.net.ntp.NTPUDPClient;
 import org.apache.commons.net.ntp.TimeInfo;
 import org.apache.commons.net.ntp.TimeStamp;
@@ -207,6 +208,22 @@ public class ZabbixService extends AbstractZabbixService {
         String lastvalue = (String) map.get("lastvalue");
         System.out.println(lastvalue);
         return lastvalue;
+    }
+
+    /**
+     * 不可用
+     * @return
+     */
+    public Integer gethost (Integer level) throws Exception {
+        ZabbixApi zabbixApi = zabbixUtil.getZabbixApi();
+        Map<Object, Object> filter = new HashMap<Object, Object>();
+        filter.put("available", level);
+        Request request = RequestBuilder.newBuilder().method("host.get").paramEntry("output", new String[]{"name"}).paramEntry("filter", filter).build();
+        JSONObject response = zabbixRequest(zabbixApi, request);
+        JSONArray result = response.getJSONArray("result");
+        return result.size();
+
+
     }
 
     /**
