@@ -138,7 +138,7 @@ public class ZabbixController {
         return diskReadRate;
     }
 
-    
+
     @ApiOperation(value = "获取IOPS")
     @PostMapping("gitISOP/{hostId}")
     public Score getIOPS(@PathVariable String hostId) throws Exception {
@@ -156,6 +156,7 @@ public class ZabbixController {
         list.add(problemNoSolve);
         return list;
     }
+
 
     @ApiOperation(value = "获取各状态监控项数量")
     @PostMapping("/getItem")
@@ -219,37 +220,6 @@ public class ZabbixController {
     public Double getHealth(String hostId) throws Exception {
         Double health = zabbixService.health(hostId);
         return health;
-//        ArrayList<Score> scoreList = new ArrayList<>();
-//        ArrayList<Double> a = new ArrayList<>();
-//        ArrayList<Double> b = new ArrayList<>();
-//        scoreList.add(zabbixService.getIOPS(hostId));
-//        scoreList.add(zabbixService.swapScore(hostId));
-//        scoreList.add(zabbixService.memoryScore(hostId));
-//        scoreList.add(zabbixService.cpuScore(hostId));
-//        for (Score sc : scoreList) {
-//            if (sc.getLimit()) {
-//                //A类权重为1
-//                a.add(sc.getScore());
-//            } else {
-//                //B类权重为依次递减
-//                b.add(sc.getScore());
-//            }
-//        }
-//        //把B排序
-//        b.sort(Comparator.reverseOrder());
-//        System.out.println(b);
-//        //按顺序计算B
-//        double bscore = 0;
-//        for (int i = 0; i < b.size(); i++){
-//            bscore += b.get(i) * (1 / (i+1));
-//        }
-//        double ascore = 0;
-//        for (int i = 0; i < b.size(); i++){
-//            ascore += a.get(i) * (1);
-//        }
-//        System.out.println("A"+ascore);
-//        System.out.println("B"+bscore);
-//        return 100-ascore-bscore;
     }
 
     @ApiOperation(value = "集群健康度计算")
@@ -264,7 +234,30 @@ public class ZabbixController {
 //            double health = getHealth(hostid);
             sum += getHealth(hostid);
         }
-        return sum/hostList.size();
+        System.out.println(sum / hostList.size());
+        int round = (int) Math.round(sum / hostList.size());
+        return round;
+    }
+
+    @ApiOperation(value = "获取温度")
+    @PostMapping("/getTem")
+    public String getTem() throws Exception {
+        String temperature = zabbixService.getTemperature();
+        return temperature.substring(0,4);
+    }
+
+    @ApiOperation(value = "获取湿度")
+    @PostMapping("/getHumidity")
+    public String getHumidity() throws Exception {
+        String humidity = zabbixService.getHumidity();
+        return humidity.substring(0,4);
+    }
+
+    @ApiOperation(value = "获取Server端磁盘占用")
+    @PostMapping("/getUtilization")
+    public String getUtilization() throws Exception {
+        String utilization = zabbixService.getUtilization();
+        return utilization.substring(0,4);
     }
 
 }

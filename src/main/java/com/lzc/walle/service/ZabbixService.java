@@ -2,6 +2,7 @@ package com.lzc.walle.service;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.lzc.walle.config.ZabbixConfig;
 import com.lzc.walle.util.ZabbixUtil;
 import com.lzc.walle.vo.Score;
 import io.github.hengyunabc.zabbix.api.Request;
@@ -28,6 +29,8 @@ import java.util.Map;
 public class ZabbixService extends AbstractZabbixService {
     @Autowired
     private ZabbixUtil zabbixUtil;
+    @Autowired
+    private ZabbixConfig zabbixConfig;
 
 
     /**
@@ -67,7 +70,7 @@ public class ZabbixService extends AbstractZabbixService {
     //获取ntp时间戳   /1000将毫秒级时间戳转换为秒级
     public long getNtpTime() throws IOException {
         NTPUDPClient timeClient = new NTPUDPClient();
-        String timeServerUrl = "192.168.0.19";
+        String timeServerUrl = zabbixConfig.getNtpip();
         InetAddress timeServerAddress = InetAddress.getByName(timeServerUrl);
         TimeInfo timeInfo = timeClient.getTime(timeServerAddress);
         TimeStamp timeStamp = timeInfo.getMessage().getTransmitTimeStamp();
@@ -103,8 +106,16 @@ public class ZabbixService extends AbstractZabbixService {
     }
 
     //TODO 获取已经解决问题
-    public String getProblemSolve() {
-        return "189";
+    public String getProblemSolve() throws Exception {
+        ZabbixApi zabbixApi = zabbixUtil.getZabbixApi();
+        Map<Object, Object> filter = new HashMap<Object, Object>();
+        filter.put("userid", "1");
+        Map<Object, Object> search = new HashMap<Object, Object>();
+        search.put("message","Problem has been resolved");
+        Request request = RequestBuilder.newBuilder().method("alert.get").paramEntry("countOutput", "true").paramEntry("filter", filter).paramEntry("search", search).build();
+        JSONObject response = zabbixRequest(zabbixApi, request);
+        String result = response.getString("result");
+        return result;
     }
 
     //未解决问题总数
@@ -145,6 +156,57 @@ public class ZabbixService extends AbstractZabbixService {
         JSONObject response = zabbixRequest(zabbixApi, request);
         Integer result = response.getInteger("result");
         return result;
+    }
+
+    /**
+     * 获取温度
+     * @return
+     */
+    public String getTemperature() throws Exception {
+        ZabbixApi zabbixApi = zabbixUtil.getZabbixApi();
+        Map<Object, Object> filter = new HashMap<Object, Object>();
+        filter.put("snmp_oid", ".1.3.6.1.4.1.100.100.0");
+        Request request = RequestBuilder.newBuilder().method("item.get").paramEntry("output", new String[]{"lastvalue"}).paramEntry("filter", filter).build();
+        JSONObject response = zabbixRequest(zabbixApi, request);
+        JSONArray result = response.getJSONArray("result");
+        Map map = JSONObject.parseObject(result.get(0).toString());
+        String lastvalue = (String) map.get("lastvalue");
+        System.out.println(lastvalue);
+        return lastvalue;
+    }
+
+    /**
+     * 获取湿度
+     * @return
+     */
+    public String getHumidity() throws Exception {
+        ZabbixApi zabbixApi = zabbixUtil.getZabbixApi();
+        Map<Object, Object> filter = new HashMap<Object, Object>();
+        filter.put("snmp_oid", ".1.3.6.1.4.1.100.101.0");
+        Request request = RequestBuilder.newBuilder().method("item.get").paramEntry("output", new String[]{"lastvalue"}).paramEntry("filter", filter).build();
+        JSONObject response = zabbixRequest(zabbixApi, request);
+        JSONArray result = response.getJSONArray("result");
+        Map map = JSONObject.parseObject(result.get(0).toString());
+        String lastvalue = (String) map.get("lastvalue");
+        System.out.println(lastvalue);
+        return lastvalue;
+
+    }
+    /**
+     * server端硬盘使用率
+     * @return
+     */
+    public String getUtilization() throws Exception {
+        ZabbixApi zabbixApi = zabbixUtil.getZabbixApi();
+        Map<Object, Object> search = new HashMap<Object, Object>();
+        search.put("key_", "vfs.fs.size[/,pused]");
+        Request request = RequestBuilder.newBuilder().method("item.get").paramEntry("output", new String[]{"lastvalue"}).paramEntry("hostids","10084").paramEntry("search",search).build();
+        JSONObject response = zabbixRequest(zabbixApi, request);
+        JSONArray result = response.getJSONArray("result");
+        Map map = JSONObject.parseObject(result.get(0).toString());
+        String lastvalue = (String) map.get("lastvalue");
+        System.out.println(lastvalue);
+        return lastvalue;
     }
 
     /**
@@ -436,8 +498,12 @@ public class ZabbixService extends AbstractZabbixService {
         filter.put("available", 1);
         Request request = RequestBuilder.newBuilder().method("host.get").paramEntry("output", new String[]{"hostid"}).paramEntry("filter", filter).build();
         JSONObject response = zabbixRequest(zabbixApi, request);
-        zabbixError(response);
         JSONArray result = response.getJSONArray("result");
         return result;
     }
+
+
+
+
+
 }
